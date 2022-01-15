@@ -6,9 +6,7 @@ from sklearn.metrics.pairwise import euclidean_distances
 from scipy.spatial import distance_matrix
 import pandas as pd
 from sklearn.cluster import KMeans
-
-def test():
-    print('hihi')
+import tqdm
 
 def load_dataset(dir_sc, images_per_class=None):
     inames = []
@@ -43,15 +41,14 @@ def ComputeHoG(im, show = False):
 
     return fd, hog_image
 
-def resize_image(img):
-    return cv.resize(img, (1024, 1024),interpolation =cv.INTER_LINEAR)
+def resize_image(img, shape = (1024,1024)):
+    return cv.resize(img, shape, interpolation =cv.INTER_LINEAR)
 
 def ComputeHoGs(inames):
 
     Hogs = []
     features = []
-    for i, x in enumerate(inames):
-        print(i)
+    for i, x in tqdm.tqdm(enumerate(inames)):
         p = os.path.join(path, x)
         img = cv.imread(p)
         gray= cv.cvtColor(img,cv.COLOR_BGR2GRAY)
@@ -73,11 +70,10 @@ def ComputeSift_CV(I):
 def ComputeSiftDataset_CV(inames):
     keypoints = []
     descriptors = []
-    for x in inames:
+    for x in tqdm.tqdm(inames):
         p = os.path.join(path, x)
-        #print(p)
         img = cv.imread(p)
-        kp, des = ComputeSift(img)
+        kp, des = ComputeSift_CV(img)
         keypoints.append(kp)
         descriptors.append(des)
     
@@ -285,9 +281,8 @@ def compute_sift_image(I):
 def ComputeSiftDataset(inames):
 
     descriptors = []
-    for x in inames:
+    for x in tqdm.tqdm(inames):
         p = os.path.join(path, x)
-        print(p)
         img = cv.imread(p)
         gray= cv.cvtColor(img,cv.COLOR_BGR2GRAY)
         gray = resize_image(gray)
@@ -344,5 +339,26 @@ def compute_feats(vdict, descriptors):
     
     norm = np.linalg.norm(feats, ord=2)
     feats = feats/norm
-
     return feats
+
+
+def ComputeLaplacian(img):
+    
+    src = cv.GaussianBlur(img, (3, 3), 0)
+    gray= cv.cvtColor(src, cv.COLOR_BGR2GRAY)
+    dst = cv.Laplacian(gray, ddepth, ksize=kernel_size)
+    gray = resize_image(dst, shape = (512,512))
+    abs_dst = cv.convertScaleAbs(gray)
+
+    return abs_dst
+
+
+def ComputeLaplacians(inames):
+    laplacians = []
+    for x in tqdm.tqdm(inames):
+        p = os.path.join(path, x)
+        img = cv.imread(p)
+        laplacian = ComputeLaplacian(img)
+        laplacian = np.ravel(laplacian)
+        laplacians.append(laplacian)
+    return laplacians
