@@ -7,6 +7,16 @@ from scipy.spatial import distance_matrix
 import pandas as pd
 from sklearn.cluster import KMeans
 import tqdm
+from skimage.feature import hog
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
+
+
+path = "images-photographes"
+
+kernel_size = 5
+ddepth = cv.CV_16S
+
 
 def load_dataset(dir_sc, images_per_class=None):
     inames = []
@@ -347,7 +357,7 @@ def ComputeLaplacian(img):
     src = cv.GaussianBlur(img, (3, 3), 0)
     gray= cv.cvtColor(src, cv.COLOR_BGR2GRAY)
     dst = cv.Laplacian(gray, ddepth, ksize=kernel_size)
-    gray = resize_image(dst, shape = (512,512))
+    gray = resize_image(dst, shape = (1024,1024))
     abs_dst = cv.convertScaleAbs(gray)
 
     return abs_dst
@@ -362,3 +372,13 @@ def ComputeLaplacians(inames):
         laplacian = np.ravel(laplacian)
         laplacians.append(laplacian)
     return laplacians
+    
+    
+    
+def getConfusionMatrix(y_true, y_pred, model):
+    cm = confusion_matrix(y_true, y_pred)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
+    disp.plot()
+
+    plt.show()
+    return cm
